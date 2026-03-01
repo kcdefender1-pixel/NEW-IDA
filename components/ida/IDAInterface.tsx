@@ -40,7 +40,6 @@ export function IDAInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [currentScanId, setCurrentScanId] = useState<string | null>(null);
-  const [greeting, setGreeting] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [hasScanned, setHasScanned] = useState(false);
 
@@ -59,7 +58,6 @@ export function IDAInterface() {
       greetingText = 'Still at it? Let\'s find something worth your time.';
     }
 
-    setGreeting(greetingText);
     // Add greeting as initial message
     setMessages([{
       id: `greeting-${Date.now()}`,

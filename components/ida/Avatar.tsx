@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 type AvatarState =
   | 'idle'
@@ -147,21 +147,6 @@ export function Avatar({ state = 'idle', size = 'md' }: AvatarProps) {
     },
   };
 
-  // Eyelid animation for blink
-  const eyelidVariants = {
-    open: {
-      yOpen: 25,
-      yClose: 50,
-    },
-    blink: {
-      yOpen: [25, 50, 25],
-      yClose: [50, 25, 50],
-      transition: {
-        duration: 0.4,
-      },
-    },
-  };
-
   return (
     <motion.svg
       width={dimension}
@@ -243,7 +228,7 @@ export function Avatar({ state = 'idle', size = 'md' }: AvatarProps) {
         variants={irisVariants}
       />
 
-      {/* Scanning line (appears during scanning state) */
+      {/* Scanning line (appears during scanning state) */}
       {state === 'scanning' && (
         <motion.line
           x1="20"

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { performScan, getScanStatus } from '@/lib/analyzer';
-import prisma from '@/lib/prisma';
 
 export async function POST(request: NextRequest) {
   try {

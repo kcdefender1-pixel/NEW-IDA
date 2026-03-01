@@ -23,8 +23,11 @@ export function ScanProgress({ isScanning, messages }: ScanProgressProps) {
       const timer = setTimeout(() => {
         setDisplayedMessages(messages);
       }, 500);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+      };
     }
+    return undefined;
   }, [messages, displayedMessages.length]);
 
   if (!isScanning && displayedMessages.length === 0) {

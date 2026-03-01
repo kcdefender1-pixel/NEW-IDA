@@ -5,7 +5,6 @@ export const metadata: Metadata = {
   title: 'IDA - Editorial Intelligence Agent',
   description: 'Intelligence for the Defender\'s Advantage. Editorial intelligence for The Kansas City Defender.',
   viewport: 'width=device-width, initial-scale=1',
-  charset: 'utf-8',
 };
 
 export default function RootLayout({

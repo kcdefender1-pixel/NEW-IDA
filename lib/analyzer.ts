@@ -1,7 +1,6 @@
 import prisma from './prisma';
-import { scrapeAllSources, ScrapedStory } from './scraper';
+import { scrapeAllSources } from './scraper';
 import { analyzeStory, generateBrief, StoryAnalysis } from './claude';
-import { SCAN_NARRATION } from './prompts';
 
 export interface ScanProgress {
   status: 'scanning' | 'analyzing' | 'complete' | 'error';

@@ -14,14 +14,12 @@ interface ChatPanelProps {
   messages: Message[];
   onSendMessage: (message: string) => Promise<void>;
   isLoading?: boolean;
-  greeting?: string;
 }
 
 export function ChatPanel({
   messages,
   onSendMessage,
   isLoading = false,
-  greeting,
 }: ChatPanelProps) {
   const [input, setInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,25 +56,19 @@ export function ChatPanel({
     >
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto px-4 py-6">
-        {/* Initial greeting if no messages */}
-        {messages.length === 0 && greeting && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mb-6"
-          >
-            <ChatMessage role="ida" content={greeting} />
-          </motion.div>
+        {messages.length === 0 ? (
+          <div className="text-center text-dark-text-muted py-8">
+            <p className="text-sm">Loading...</p>
+          </div>
+        ) : (
+          messages.map((msg) => (
+            <ChatMessage
+              key={msg.id}
+              role={msg.role}
+              content={msg.content}
+            />
+          ))
         )}
-
-        {/* Chat messages */}
-        {messages.map((msg) => (
-          <ChatMessage
-            key={msg.id}
-            role={msg.role}
-            content={msg.content}
-          />
-        ))}
 
         {/* Loading indicator */}
         {isLoading && (

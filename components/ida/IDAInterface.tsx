@@ -42,6 +42,7 @@ export function IDAInterface() {
   const [currentScanId, setCurrentScanId] = useState<string | null>(null);
   const [greeting, setGreeting] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [hasScanned, setHasScanned] = useState(false);
 
   // Load greeting on mount
   useEffect(() => {
@@ -59,13 +60,22 @@ export function IDAInterface() {
     }
 
     setGreeting(greetingText);
+    // Add greeting as initial message
+    setMessages([{
+      id: `greeting-${Date.now()}`,
+      role: 'ida',
+      content: greetingText,
+    }]);
   }, []);
 
   const handleScan = useCallback(
     async (focus: 'all' | 'police' | 'organizing' | 'troost' | 'economy' = 'all') => {
+      if (isLoading) return; // Prevent multiple concurrent scans
+
       setStatus('scanning');
       setMessages([]); // Clear previous messages
       setIsLoading(true);
+      setHasScanned(true);
 
       try {
         // Simulate scan narration
@@ -86,17 +96,20 @@ export function IDAInterface() {
               content: narration,
             },
           ]);
-          await new Promise((resolve) => setTimeout(resolve, 800));
+          await new Promise((resolve) => setTimeout(resolve, 600));
         }
 
         // Perform actual scan
+        setStatus('thinking');
         const response = await fetch('/api/scan', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ focus }),
         });
 
-        if (!response.ok) throw new Error('Scan failed');
+        if (!response.ok) {
+          throw new Error(`Scan failed: ${response.statusText}`);
+        }
         const scanData = await response.json();
 
         setCurrentScanId(scanData.scanId);
@@ -105,6 +118,9 @@ export function IDAInterface() {
         const storiesResponse = await fetch(
           `/api/stories?scanId=${scanData.scanId}`
         );
+        if (!storiesResponse.ok) {
+          throw new Error('Failed to fetch stories');
+        }
         const storiesData = await storiesResponse.json();
         setStories(storiesData.stories || []);
 
@@ -114,7 +130,7 @@ export function IDAInterface() {
           {
             id: `brief-${Date.now()}`,
             role: 'ida',
-            content: scanData.briefText,
+            content: scanData.briefText || 'Brief generated successfully.',
           },
         ]);
 
@@ -122,19 +138,20 @@ export function IDAInterface() {
       } catch (error) {
         console.error('Scan error:', error);
         setStatus('alert');
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
         setMessages((prev) => [
           ...prev,
           {
             id: `error-${Date.now()}`,
             role: 'ida',
-            content: 'I encountered an issue during the scan. Please try again.',
+            content: `I encountered an issue during the scan: ${errorMessage}. Please check your API key and try again.`,
           },
         ]);
       } finally {
         setIsLoading(false);
       }
     },
-    []
+    [isLoading]
   );
 
   const handleSendMessage = useCallback(
@@ -231,7 +248,6 @@ export function IDAInterface() {
             messages={messages}
             onSendMessage={handleSendMessage}
             isLoading={isLoading}
-            greeting={greeting}
           />
         </motion.div>
 
@@ -242,31 +258,54 @@ export function IDAInterface() {
           className="flex-1 flex flex-col overflow-hidden bg-dark-surface"
         >
           {/* Action buttons at top */}
-          {messages.length === 0 && (
+          {!hasScanned && (
             <div className="p-4 border-b border-dark-border space-y-2">
               <button
                 onClick={() => handleScan('all')}
                 disabled={isLoading}
-                className="w-full px-4 py-2 bg-ida-amber text-dark-bg rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
+                className="w-full px-4 py-2 bg-ida-amber text-dark-bg rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
-                Scan Everything
+                {isLoading ? 'Scanning...' : 'Scan Everything'}
               </button>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => handleScan('police')}
                   disabled={isLoading}
-                  className="px-3 py-2 bg-ida-red/20 text-ida-red rounded-lg hover:bg-ida-red/30 transition-colors disabled:opacity-50 text-xs font-medium"
+                  className="px-3 py-2 bg-ida-red/20 text-ida-red rounded-lg hover:bg-ida-red/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium"
                 >
                   Focus: Police
                 </button>
                 <button
                   onClick={() => handleScan('organizing')}
                   disabled={isLoading}
-                  className="px-3 py-2 bg-ida-green/20 text-ida-green rounded-lg hover:bg-ida-green/30 transition-colors disabled:opacity-50 text-xs font-medium"
+                  className="px-3 py-2 bg-ida-green/20 text-ida-green rounded-lg hover:bg-ida-green/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium"
                 >
                   Focus: Organizing
                 </button>
               </div>
+              <button
+                onClick={() => handleScan('all')}
+                disabled={isLoading}
+                className="w-full px-3 py-2 bg-dark-elevated hover:bg-dark-border text-dark-text-secondary hover:text-dark-text-primary rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium"
+              >
+                New Scan
+              </button>
+            </div>
+          )}
+
+          {/* Rescan button if scan has been done */}
+          {hasScanned && !isLoading && (
+            <div className="p-2 border-b border-dark-border">
+              <button
+                onClick={() => {
+                  setHasScanned(false);
+                  setStories([]);
+                  setCurrentScanId(null);
+                }}
+                className="w-full px-3 py-2 text-xs text-dark-text-secondary hover:text-ida-amber transition-colors"
+              >
+                ← Back to scan options
+              </button>
             </div>
           )}
 
